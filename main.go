@@ -57,6 +57,7 @@ func handlePlay(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(404)
 			return
 		}
+		http.Redirect(w, r, "/", 307)
 		cmd := exec.Command("omxplayer", "-o", "hdmi", filename)
 		err := cmd.Run()
 		if err != nil {
@@ -65,7 +66,6 @@ func handlePlay(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Error("no .mp3 suffix")
 	}
-	http.Redirect(w, r, "/", 307)
 }
 
 func incCounter(filename string) {

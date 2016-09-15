@@ -12,9 +12,11 @@ import (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
+	log.WithField("requestURi", r.RequestURI).Info("HTTP")
+
 	if strings.HasPrefix(r.RequestURI, "/play") {
 		handlePlay(w, r)
-	} else if strings.HasPrefix(r.RequestURI, "/image") {
+	} else if strings.HasPrefix(r.RequestURI, "/images") {
 		handleImage(w, r)
 	} else {
 		handleIndex(w, r)
@@ -38,14 +40,15 @@ func handleImage(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePlay(w http.ResponseWriter, r *http.Request) {
-	filename := "sounds/" + r.RequestURI[5:]
+	filename := "sounds/" + r.RequestURI[6:]
+	log.WithField("filename", filename).Info("playing sound")
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		log.Error(filename)
 		w.WriteHeader(404)
 		return
 	}
 	exec.Command("omxplayer", "-p", "-o", "hdmi", filename)
-	http.Redirect(w, r, "/", 301)
+	http.Redirect(w, r, "/", 307)
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {

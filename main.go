@@ -8,7 +8,11 @@ import (
 	"strings"
 	"os"
 	"os/exec"
+	"strconv"
+	"sync"
 )
+
+var mutex = &sync.Mutex{}
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
@@ -40,22 +44,64 @@ func handleImage(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePlay(w http.ResponseWriter, r *http.Request) {
+
 	filename := "sounds/" + r.RequestURI[6:]
-	log.WithField("filename", filename).Info("playing sound")
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		log.Error(filename)
-		w.WriteHeader(404)
-		return
-	}
-	cmd := exec.Command("omxplayer", "-o", "hdmi", filename)
-	err := cmd.Run()
-	if err != nil {
-		log.Error(err)
+
+	if strings.HasSuffix(filename, ".mp3") {
+
+		incCounter(filename)
+
+		log.WithField("filename", filename).Info("playing sound")
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			log.Error(filename)
+			w.WriteHeader(404)
+			return
+		}
+		cmd := exec.Command("omxplayer", "-o", "hdmi", filename)
+		err := cmd.Run()
+		if err != nil {
+			log.Error(err)
+		}
+	} else {
+		log.Error("no .mp3 suffix")
 	}
 	http.Redirect(w, r, "/", 307)
 }
 
+func incCounter(filename string) {
+
+	log.WithField("filename", filename).Info("Increasing counter")
+
+	mutex.Lock()
+	intCount := getCounter(filename)
+	log.WithField("count", intCount).Info("Old count")
+	intCount++
+
+	ioutil.WriteFile(filename + ".count", []byte(fmt.Sprintf("%d", intCount)), 0644)
+	mutex.Unlock()
+}
+
+func getCounter(filename string) int {
+
+	countfile := filename + ".count"
+
+	if _, err := os.Stat(countfile); os.IsNotExist(err) {
+		return 0
+	}
+
+	count, err := ioutil.ReadFile(countfile)
+	intCount, err := strconv.Atoi(string(count))
+	if err != nil {
+		log.Error(err)
+	}
+	return intCount
+}
+
+
 func handleIndex(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Fprint(w, "<html><body style=\"font-family: arial, helvetica\">")
+
 	dir, err := ioutil.ReadDir("sounds")
 	if err != nil {
 		log.Error(err)
@@ -65,8 +111,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		if !v.IsDir() {
 			filename := v.Name()
 			if (strings.HasSuffix(filename, ".mp3")) {
-
-				fmt.Fprintf(w, "<a href=\"/play/" + filename + "\">")
+				fmt.Fprintf(w, "<div style=\"border: 1px solid black; margin: 3px; padding: 3px; float: left\"><div><a href=\"/play/" + filename + "\">")
 
 				filenameWithoutExt := filename[:len(filename)-4]
 
@@ -82,10 +127,12 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 					fmt.Fprintf(w, "<img src=\"/images/" + pngFilename + "\">")
 				}
 
-				fmt.Fprintf(w, "</a>")
+				fmt.Fprintf(w, "</a></div><div style=\"padding-top: 3px;\">played %d times</div></div>", getCounter("sounds/" + filename))
 			}
 		}
 	}
+
+	fmt.Fprint(w, "</body></html>")
 }
 
 func main() {

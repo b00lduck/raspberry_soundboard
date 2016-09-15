@@ -47,7 +47,8 @@ func handlePlay(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		return
 	}
-	exec.Command("omxplayer", "-p", "-o", "hdmi", filename)
+	cmd := exec.Command("omxplayer", "-p", "-o hdmi", filename)
+	cmd.Run()
 	http.Redirect(w, r, "/", 307)
 }
 

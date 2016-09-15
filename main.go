@@ -10,9 +10,18 @@ import (
 	"os/exec"
 	"strconv"
 	"sync"
+	"html/template"
+	"github.com/b00lduck/raspberry_soundboard/templates"
 )
 
 var mutex = &sync.Mutex{}
+
+type Sound struct {
+	SoundFile string
+	ImageFile string
+	HasImage  bool
+	Count     int
+}
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
@@ -98,10 +107,25 @@ func getCounter(filename string) int {
 	return intCount
 }
 
-
 func handleIndex(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Fprint(w, "<html><body style=\"font-family: arial, helvetica\">")
+	sounds := getSounds()
+
+	t := template.New("html")
+	t, err := t.Parse(templates.MainTemplate)
+	if err != nil {
+		log.Error(err)
+	}
+
+	err = t.Execute(w, sounds)
+	if err != nil {
+		log.Error(err)
+	}
+
+}
+
+func getSounds() []Sound {
+	sounds := make([]Sound, 0)
 
 	dir, err := ioutil.ReadDir("sounds")
 	if err != nil {
@@ -112,28 +136,29 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		if !v.IsDir() {
 			filename := v.Name()
 			if (strings.HasSuffix(filename, ".mp3")) {
-				fmt.Fprintf(w, "<div style=\"border: 1px solid black; margin: 3px; padding: 3px; float: left\"><div><a href=\"/play/" + filename + "\">")
-
+				newSound := Sound{
+					SoundFile: filename,
+					HasImage: true,
+					Count: getCounter("sounds/" + filename),
+				}
 				filenameWithoutExt := filename[:len(filename)-4]
-
 				pngFilename := filenameWithoutExt + ".png"
 				if _, err := os.Stat("sounds/" + pngFilename); os.IsNotExist(err) {
 					jpgFilename := filenameWithoutExt + ".jpg"
 					if _, err := os.Stat("sounds/" + jpgFilename); os.IsNotExist(err) {
-						fmt.Fprintf(w, filename)
+						newSound.HasImage = false
 					} else {
-						fmt.Fprintf(w, "<img src=\"/images/" + jpgFilename + "\">")
+						newSound.ImageFile = jpgFilename
 					}
 				} else {
-					fmt.Fprintf(w, "<img src=\"/images/" + pngFilename + "\">")
+					newSound.ImageFile = pngFilename
 				}
-
-				fmt.Fprintf(w, "</a></div><div style=\"padding-top: 3px;\">played %d times</div></div>", getCounter("sounds/" + filename))
+				sounds = append(sounds, newSound)
 			}
 		}
 	}
 
-	fmt.Fprint(w, "</body></html>")
+	return sounds
 }
 
 func main() {

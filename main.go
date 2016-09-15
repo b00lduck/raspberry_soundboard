@@ -49,8 +49,6 @@ func handlePlay(w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasSuffix(filename, ".mp3") {
 
-		incCounter(filename)
-
 		log.WithField("filename", filename).Info("playing sound")
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
 			log.Error(filename)
@@ -62,7 +60,10 @@ func handlePlay(w http.ResponseWriter, r *http.Request) {
 		err := cmd.Run()
 		if err != nil {
 			log.Error(err)
+		} else {
+			incCounter(filename)
 		}
+
 	} else {
 		log.Error("no .mp3 suffix")
 	}

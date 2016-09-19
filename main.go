@@ -12,6 +12,7 @@ import (
 	"sync"
 	"html/template"
 	"github.com/b00lduck/raspberry_soundboard/templates"
+	"math/rand"
 )
 
 var mutex = &sync.Mutex{}
@@ -29,6 +30,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasPrefix(r.RequestURI, "/play") {
 		handlePlay(w, r)
+	} else if strings.HasPrefix(r.RequestURI, "/random") {
+		handleRandomPlay(w, r)
 	} else if strings.HasPrefix(r.RequestURI, "/images") {
 		handleImage(w, r)
 	} else {
@@ -52,30 +55,57 @@ func handleImage(w http.ResponseWriter, r *http.Request) {
 	w.Write(image)
 }
 
+func handleRandomPlay(w http.ResponseWriter, r *http.Request) {
+
+	sounds := getSounds()
+
+	filename := "sounds/" + sounds[rand.Intn(len(sounds))].SoundFile
+
+	err := play(filename)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	http.Redirect(w, r, "/", 307)
+}
+
 func handlePlay(w http.ResponseWriter, r *http.Request) {
 
 	filename := "sounds/" + r.RequestURI[6:]
 
+	err := play(filename)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	http.Redirect(w, r, "/", 307)
+
+}
+
+func play(filename string) error {
 	if strings.HasSuffix(filename, ".mp3") {
 
 		log.WithField("filename", filename).Info("playing sound")
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
 			log.Error(filename)
-			w.WriteHeader(404)
-			return
-		}
-		http.Redirect(w, r, "/", 307)
-		cmd := exec.Command("omxplayer", "-o", "hdmi", filename)
-		err := cmd.Start()
-		if err != nil {
-			log.Error(err)
-		} else {
-			incCounter(filename)
-		}
+			return fmt.Errorf("Not found")
 
+		}
+		go func() {
+			cmd := exec.Command("omxplayer", "-o", "hdmi", filename)
+			err := cmd.Start()
+			if err != nil {
+				log.Error(err)
+			} else {
+				incCounter(filename)
+			}
+		}()
 	} else {
-		log.Error("no .mp3 suffix")
+		return fmt.Errorf("no .mp3 suffix")
 	}
+	return nil
 }
 
 func incCounter(filename string) {

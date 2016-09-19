@@ -84,7 +84,7 @@ ASAAAAAASUVORK5CYII=">
 			</a>
 		</div>
 		<div style="padding-top: 3px;">
-			played {{.Count}} times
+			&nbsp;
 		</div>
 	</div>
 </body>

@@ -95,12 +95,14 @@ func play(filename string) error {
 		}
 		go func() {
 			cmd := exec.Command("omxplayer", "-o", "hdmi", filename)
-			err := cmd.Start()
+			cmd.Stdout = os.DevNull
+			err := cmd.Run()
 			if err != nil {
 				log.Error(err)
 			} else {
 				incCounter(filename)
 			}
+			os.Exit(0)
 		}()
 	} else {
 		return fmt.Errorf("no .mp3 suffix")

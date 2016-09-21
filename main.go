@@ -101,7 +101,6 @@ func play(filename string) error {
 			} else {
 				incCounter(filename)
 			}
-			os.Exit(0)
 		}()
 	} else {
 		return fmt.Errorf("no .mp3 suffix")

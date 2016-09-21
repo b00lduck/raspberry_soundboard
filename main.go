@@ -95,7 +95,6 @@ func play(filename string) error {
 		}
 		go func() {
 			cmd := exec.Command("omxplayer", "-o", "hdmi", filename)
-			cmd.Stdout = os.DevNull
 			err := cmd.Run()
 			if err != nil {
 				log.Error(err)

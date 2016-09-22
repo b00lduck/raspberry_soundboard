@@ -94,13 +94,12 @@ func play(filename string) error {
 			return fmt.Errorf("Not found")
 
 		}
+		incCounter(filename)
 		go func() {
 			cmd := exec.Command("omxplayer", "-o", "hdmi", filename)
 			err := cmd.Run()
 			if err != nil {
 				log.Error(err)
-			} else {
-				incCounter(filename)
 			}
 		}()
 	} else {

@@ -13,6 +13,7 @@ import (
 	"html/template"
 	"github.com/b00lduck/raspberry_soundboard/templates"
 	"math/rand"
+	"sort"
 )
 
 var mutex = &sync.Mutex{}
@@ -154,6 +155,18 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type ByNumPlayed []Sound
+
+func (s ByNumPlayed) Len() int {
+	return len(s)
+}
+func (s ByNumPlayed) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s ByNumPlayed) Less(i, j int) bool {
+	return s[i].Count < s[j].Count
+}
+
 func getSounds() []Sound {
 	sounds := make([]Sound, 0)
 
@@ -187,6 +200,8 @@ func getSounds() []Sound {
 			}
 		}
 	}
+
+	sort.Sort(ByNumPlayed(sounds))
 
 	return sounds
 }

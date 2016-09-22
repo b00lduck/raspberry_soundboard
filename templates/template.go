@@ -9,7 +9,10 @@ const MainTemplate = `
 			<a href="/play/{{.SoundFile}}">
 				{{if .HasImage}}
 					<img src="images/{{.ImageFile}}">
+				{{else}}
+					{{.SoundFile}}
 				{{end}}
+
 			</a>
 		</div>
 		<div style="padding-top: 3px;">

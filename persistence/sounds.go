@@ -37,6 +37,7 @@ func GetSounds(directory string) SoundList {
 					SoundFile: filename,
 					HasImage: true,
 					Count: getCountLegacy(directory + "/" + filename),
+					Temperature: 20,
 				}
 				filenameWithoutExt := filename[:len(filename)-4]
 				pngFilename := filenameWithoutExt + ".png"

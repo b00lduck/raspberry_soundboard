@@ -1,6 +1,7 @@
 import React from 'react';
 import Websocket from 'react-websocket';
 import './SoundList.css';
+import Sound from './Sound.js';
 
 export default class SoundList extends React.Component {
 
@@ -19,13 +20,11 @@ export default class SoundList extends React.Component {
         return (
             <div className="SoundList">
                 {this.state.Sounds.map(item => (
-                    <div className="Sound" key={item.SoundFile}>
-                        <img alt="mp3" src={"http://localhost:8080/api/image/" + item.ImageFile} />
-                        <div>{item.Count}x</div>
-                    </div>
+                       <Sound data={item} key={item.SoundFile} />
                 ))}
-                <Websocket url='ws://localhost:8080/api/websocket' onMessage={this.handleData.bind(this)}/>
+                <Websocket url="ws://localhost:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
             </div>
         );
     }
+
 }

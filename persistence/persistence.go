@@ -12,10 +12,11 @@ type SoundList struct {
 }
 
 type Sound struct {
-	SoundFile string
-	ImageFile string
-	HasImage  bool
-	Count     int
+	SoundFile   string
+	ImageFile   string
+	HasImage    bool
+	Count       int
+	Temperature int
 }
 
 var mutex = &sync.Mutex{}
@@ -54,6 +55,7 @@ func IncCounter(filename string) {
 	if found {
 		log.WithField("key", k).Info("Increasing counter")
 		state.Sounds[k].Count++
+		state.Sounds[k].Temperature += 5
 		log.WithField("count", state.Sounds[k].Count).Error("Increased sound count")
 	} else {
 		log.WithField("id", k).Error("Sound not found during counter increase")

@@ -37,6 +37,15 @@ func State() SoundList {
 	return state
 }
 
+func JsonState() []byte {
+	soundList := State()
+	myJson, err := json.Marshal(soundList)
+	if err != nil {
+		log.Error(err)
+	}
+	return myJson
+}
+
 func IncCounter(filename string) {
 	mutex.Lock()
 	defer mutex.Unlock()

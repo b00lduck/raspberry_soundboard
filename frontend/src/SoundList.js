@@ -1,20 +1,29 @@
 import React from 'react';
-import Sound from './Sound.js';
 import Websocket from 'react-websocket';
+import './SoundList.css';
 
 export default class SoundList extends React.Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            Sounds: []
+        };
+    }
+
     handleData(data) {
-        let result = JSON.parse(data);
-        console.log(result);
-        //this.setState({count: this.state.numPlayed + result.movement});
+        this.setState(JSON.parse(data));
     }
 
     render() {
         return (
             <div className="SoundList">
-                <Sound name="sound1" />
-                <Sound name="sound2" />
+                {this.state.Sounds.map(item => (
+                    <div className="Sound" key={item.SoundFile}>
+                        <img alt="mp3" src={"http://localhost:8080/api/image/" + item.ImageFile} />
+                        <div>{item.Count}x</div>
+                    </div>
+                ))}
                 <Websocket url='ws://localhost:8080/api/websocket' onMessage={this.handleData.bind(this)}/>
             </div>
         );

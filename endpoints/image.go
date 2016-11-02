@@ -12,7 +12,7 @@ func InitImage() {
 }
 
 func imageHandler(w http.ResponseWriter, r *http.Request) {
-	filename := "sounds/" + r.RequestURI[8:]
+	filename := "sounds/" + r.RequestURI[11:]
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		log.Error(filename)
 		w.WriteHeader(404)

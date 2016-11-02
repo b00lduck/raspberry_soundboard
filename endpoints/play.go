@@ -8,9 +8,10 @@ import (
 	"net/http"
 	log "github.com/Sirupsen/logrus"
 	"github.com/b00lduck/raspberry_soundboard/persistence"
+	"github.com/b00lduck/raspberry_soundboard/websocket"
 )
 
-func InitPlay(syncChan chan int) {
+func InitPlay(hub *websocket.Hub) {
 	http.HandleFunc("/api/play/", func (w http.ResponseWriter, r *http.Request) {
 
 		log.WithField("URI", r.RequestURI).Info("Incoming play request")
@@ -19,9 +20,7 @@ func InitPlay(syncChan chan int) {
 
 		err := playSound(filename)
 
-		for i:=0;i<numClients;i++ {
-			syncChan <- 1
-		}
+		hub.BroadcastState()
 
 		if err != nil {
 			w.WriteHeader(500)

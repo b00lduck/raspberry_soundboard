@@ -11,13 +11,11 @@ import (
 
 func main() {
 
-	syncChan := make(chan int)
-
 	persistence.Init()
 
 	endpoints.InitImage()
-	endpoints.InitPlay(syncChan)
-	endpoints.InitWebsocket(syncChan)
+	hub := endpoints.InitWebsocket()
+	endpoints.InitPlay(hub)
 
 	err := http.ListenAndServe(":8080", nil)
 

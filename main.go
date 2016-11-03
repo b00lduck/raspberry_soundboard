@@ -21,6 +21,7 @@ func main() {
 
 	endpoints.InitImage()
 	endpoints.InitPlay(persistence)
+	http.Handle("/", http.FileServer(http.Dir("frontend/build")))
 
 	go physics.Process(persistence)
 

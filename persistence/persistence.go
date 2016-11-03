@@ -70,7 +70,7 @@ func (p *Persistence) IncCounter(filename string) {
 	if found {
 		if (!p.state.Sounds[k].Overheated) {
 			p.state.Sounds[k].Count++
-			p.state.Sounds[k].Temperature += 50.0
+			p.state.Sounds[k].Temperature += 30.0
 			log.WithField("count", p.state.Sounds[k].Count).
 			    WithField("temp", p.state.Sounds[k].Temperature).
 			    Error("Increased sound count and temperature")

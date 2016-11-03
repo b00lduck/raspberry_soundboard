@@ -20,7 +20,7 @@ func Process(persistence *persistence.Persistence) {
 				changed = true
 			} else if (v.Temperature != 20) {
 				oldTemp := float32(v.Temperature)
-				diff := (oldTemp - 20.0) * 0.003
+				diff := (oldTemp - 20.0) * 0.001
 				newTemp := oldTemp - diff
 				state.Sounds[k].Temperature = newTemp
 				changed = true

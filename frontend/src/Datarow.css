@@ -1,0 +1,23 @@
+.Datarow {
+  color: black;
+  font-size: 0.8em;
+}
+
+.Datarow .left {
+  text-align: left;
+  width: 48%;
+  float: left;
+  padding-left: 2%;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.Datarow .right {
+  text-align: right;
+  float: left;
+  width: 48%;
+  padding-right: 2%;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+

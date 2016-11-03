@@ -1,5 +1,7 @@
-.Sound {
-  border: 1px solid black;
-  float: left;
+.SoundList {
   margin: 4px;
+}
+
+.clearfix {
+  clear: both;
 }

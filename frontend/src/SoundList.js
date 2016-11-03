@@ -2,6 +2,7 @@ import React from 'react';
 import Websocket from 'react-websocket';
 import './SoundList.css';
 import Sound from './Sound.js';
+import SoundOverheated from './SoundOverheated.js';
 
 export default class SoundList extends React.Component {
 
@@ -37,10 +38,11 @@ export default class SoundList extends React.Component {
                         <Sound data={item} key={item.SoundFile} />
                     ))
                 }
-                <br/>
+                <br className="clearfix" />
+                <hr />
                 {
                     this.state.OverheatedSounds.map(item => (
-                       <Sound data={item} key={item.SoundFile} />
+                       <SoundOverheated data={item} key={item.SoundFile} />
                     ))
                 }
                 <Websocket url="ws://localhost:8080/api/websocket" onMessage={this.handleData.bind(this)}/>

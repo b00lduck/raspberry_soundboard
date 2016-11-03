@@ -1,7 +1,7 @@
 import React from 'react';
-import './Sound.css';
-import Image from './Image.js';
+import './SoundOverheated.css';
 import Datarow from './Datarow.js';
+import Image from './Image.js';
 
 export default class Sound extends React.Component {
 
@@ -14,15 +14,13 @@ export default class Sound extends React.Component {
         this.setState(props.data);
     }
 
-    play() {
-        fetch('http://localhost:8080/api/play/' + this.state.SoundFile);
-    }
-
     render() {
         return (
-            <div className="Sound" onClick={this.play.bind(this)}>
-                <Image data={this.state} />
-                <Datarow data={this.state} />
+            <div className="SoundOverheated">
+                <div>
+                    <Image data={this.state} />
+                    <Datarow data={this.state} />
+                </div>
             </div>
         )
     }

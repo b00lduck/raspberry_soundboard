@@ -20,7 +20,7 @@ export default class Sound extends React.Component {
             <div className="Sound" onClick={this.play.bind(this)}>
                 <img alt="mp3" src={"http://localhost:8080/api/image/" + this.state.ImageFile} />
                 <div>{this.state.Count}x</div>
-                <div>{this.state.Temperature}°</div>
+                <div>{Math.round(this.state.Temperature*100)/100}°</div>
             </div>
         )
     }

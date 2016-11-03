@@ -16,30 +16,45 @@ type Sound struct {
 	ImageFile   string
 	HasImage    bool
 	Count       int
-	Temperature int
+	Temperature float32
+	Overheated  bool
 }
 
-var mutex = &sync.Mutex{}
-
-var state = SoundList{
-	Sounds: make([]Sound,0)}
-
-func Init() {
-	Load()
+type Persistence struct {
+	PersistCallback func()
+	mutex *sync.Mutex
+	state *SoundList
 }
 
-func LoadSounds(directory string) {
-	mutex.Lock()
-	loadSoundsNolock(directory)
-	mutex.Unlock()
+func NewPersistence() *Persistence {
+	obj := Persistence{
+		mutex: &sync.Mutex{},
+		state: &SoundList{Sounds: make([]Sound,0)},
+		PersistCallback: nil}
+	obj.Load()
+	return &obj
 }
 
-func State() SoundList {
-	return state
+func (p *Persistence) LoadSounds(directory string) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	p.loadSoundsNolock(directory)
 }
 
-func JsonState() []byte {
-	soundList := State()
+func (p *Persistence) State() *SoundList {
+	return p.state
+}
+
+func (p *Persistence) Lock() {
+	p.mutex.Lock()
+}
+
+func (p *Persistence) Unlock() {
+	p.mutex.Unlock()
+}
+
+func (p *Persistence) JsonState() []byte {
+	soundList := p.State()
 	myJson, err := json.Marshal(soundList)
 	if err != nil {
 		log.Error(err)
@@ -47,45 +62,54 @@ func JsonState() []byte {
 	return myJson
 }
 
-func IncCounter(filename string) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (p *Persistence) IncCounter(filename string) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 
-	k, found := getSoundIndex(filename)
+	k, found := p.getSoundIndex(filename)
 	if found {
-		log.WithField("key", k).Info("Increasing counter")
-		state.Sounds[k].Count++
-		state.Sounds[k].Temperature += 5
-		log.WithField("count", state.Sounds[k].Count).Error("Increased sound count")
+		if (!p.state.Sounds[k].Overheated) {
+			p.state.Sounds[k].Count++
+			p.state.Sounds[k].Temperature += 50.0
+			log.WithField("count", p.state.Sounds[k].Count).
+			    WithField("temp", p.state.Sounds[k].Temperature).
+			    Error("Increased sound count and temperature")
+			if p.state.Sounds[k].Temperature > 100.0 {
+				log.WithField("temp", p.state.Sounds[k].Temperature).Error("Sound now overheated! Bäm!")
+				p.state.Sounds[k].Overheated = true
+			}
+		} else {
+			log.WithField("temp", p.state.Sounds[k].Temperature).Error("Sound too hot, cool down first")
+		}
 	} else {
 		log.WithField("id", k).Error("Sound not found during counter increase")
 	}
-	persistNolock()
+	p.PersistNoLock()
 }
 
-func Persist() error {
-	mutex.Lock()
-	defer mutex.Unlock()
-	return persistNolock()
+func (p *Persistence) Persist() error {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	return p.PersistNoLock()
 }
 
-func Load() {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (p *Persistence) Load() {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	bytes, err := ioutil.ReadFile("database.json")
 	if err != nil {
 		log.Error(err)
 	}
-	err = json.Unmarshal(bytes, &state)
+	err = json.Unmarshal(bytes, &p.state)
 	if err != nil {
 		log.Error(err)
 	}
-	log.WithField("numSounds", len(state.Sounds)).Info("Database loaded from disk")
-	loadSoundsNolock("sounds")
+	log.WithField("numSounds", len(p.state.Sounds)).Info("Database loaded from disk")
+	p.loadSoundsNolock("sounds")
 }
 
-func persistNolock() error {
-	bytes, err := json.Marshal(state)
+func (p *Persistence) PersistNoLock() error {
+	bytes, err := json.Marshal(p.state)
 	if err != nil {
 		return err
 	}
@@ -93,23 +117,26 @@ func persistNolock() error {
 	if err != nil {
 		return err
 	}
-	log.WithField("numSounds", len(state.Sounds)).Info("Database saved to disk")
+	log.WithField("numSounds", len(p.state.Sounds)).Info("Database saved to disk")
+	if p.PersistCallback != nil {
+		p.PersistCallback()
+	}
 	return nil
 }
 
-func loadSoundsNolock(directory string) {
+func (p *Persistence) loadSoundsNolock(directory string) {
 	sounds := GetSounds(directory)
 	for _, v := range sounds.Sounds {
-		if _, found := getSoundIndex(v.SoundFile); !found {
-			state.Sounds = append(state.Sounds, v)
+		if _, found := p.getSoundIndex(v.SoundFile); !found {
+			p.state.Sounds = append(p.state.Sounds, v)
 		}
 	}
-	log.WithField("numSounds", len(state.Sounds)).Info("Sounds updated from sound folder")
-	persistNolock()
+	log.WithField("numSounds", len(p.state.Sounds)).Info("Sounds updated from sound folder")
+	p.PersistNoLock()
 }
 
-func getSoundIndex(name string) (int, bool) {
-	for k, v := range state.Sounds {
+func (p *Persistence) getSoundIndex(name string) (int, bool) {
+	for k, v := range p.state.Sounds {
 		if v.SoundFile == name {
 			return k, true
 		}

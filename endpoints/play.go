@@ -8,19 +8,16 @@ import (
 	"net/http"
 	log "github.com/Sirupsen/logrus"
 	"github.com/b00lduck/raspberry_soundboard/persistence"
-	"github.com/b00lduck/raspberry_soundboard/websocket"
 )
 
-func InitPlay(hub *websocket.Hub) {
+func InitPlay(persistence *persistence.Persistence) {
 	http.HandleFunc("/api/play/", func (w http.ResponseWriter, r *http.Request) {
 
 		log.WithField("URI", r.RequestURI).Info("Incoming play request")
 
 		filename := r.RequestURI[10:]
 
-		err := playSound(filename)
-
-		hub.BroadcastState()
+		err := playSound(filename, persistence)
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -31,7 +28,7 @@ func InitPlay(hub *websocket.Hub) {
 	})
 }
 
-func playSound(filename string) error {
+func playSound(filename string, persistence *persistence.Persistence) error {
 	if strings.HasSuffix(filename, ".mp3") {
 
 		persistence.IncCounter(filename)

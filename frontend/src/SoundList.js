@@ -8,20 +8,41 @@ export default class SoundList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            Sounds: []
+            AvailableSounds: [],
+            OverheatedSounds: []
         };
     }
 
     handleData(data) {
-        this.setState(JSON.parse(data));
+        let newState = {
+            AvailableSounds: [],
+            OverheatedSounds: []
+        };
+
+        JSON.parse(data).Sounds.forEach(function(x) {
+           if (x.Overheated) {
+               newState.OverheatedSounds.push(x);
+           } else {
+               newState.AvailableSounds.push(x);
+           }
+        });
+        this.setState(newState);
     }
 
     render() {
         return (
             <div className="SoundList">
-                {this.state.Sounds.map(item => (
+                {
+                    this.state.AvailableSounds.map(item => (
+                        <Sound data={item} key={item.SoundFile} />
+                    ))
+                }
+                <br/>
+                {
+                    this.state.OverheatedSounds.map(item => (
                        <Sound data={item} key={item.SoundFile} />
-                ))}
+                    ))
+                }
                 <Websocket url="ws://localhost:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
             </div>
         );

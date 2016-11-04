@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"time"
+	"bytes"
 )
 
 type SoundList struct {
@@ -25,6 +26,7 @@ type Persistence struct {
 	UpdateCallback func()
 	mutex          *sync.Mutex
 	state          *SoundList
+	oldJsonState   []byte
 }
 
 func NewPersistence() *Persistence {
@@ -130,15 +132,19 @@ func (p *Persistence) Load() {
 }
 
 func (p *Persistence) persistNoLock() error {
-	bytes, err := json.Marshal(p.state)
+	jsonbytes, err := json.Marshal(p.state)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile("database.json", bytes, 0644)
-	if err != nil {
-		return err
+
+	if !bytes.Equal(jsonbytes, p.oldJsonState) {
+		err = ioutil.WriteFile("database.json", jsonbytes, 0644)
+		if err != nil {
+			return err
+		}
+		log.WithField("numSounds", len(p.state.Sounds)).Info("Database saved to disk")
+		p.oldJsonState = jsonbytes
 	}
-	log.WithField("numSounds", len(p.state.Sounds)).Info("Database saved to disk")
 	return nil
 }
 

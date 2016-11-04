@@ -5,6 +5,7 @@ import (
 	"sync"
 	"encoding/json"
 	"io/ioutil"
+	"time"
 )
 
 type SoundList struct {
@@ -21,18 +22,26 @@ type Sound struct {
 }
 
 type Persistence struct {
-	PersistCallback func()
-	mutex *sync.Mutex
-	state *SoundList
+	UpdateCallback func()
+	mutex          *sync.Mutex
+	state          *SoundList
 }
 
 func NewPersistence() *Persistence {
 	obj := Persistence{
 		mutex: &sync.Mutex{},
 		state: &SoundList{Sounds: make([]Sound,0)},
-		PersistCallback: nil}
+		UpdateCallback: nil}
 	obj.Load()
+	go obj.SaveThread()
 	return &obj
+}
+
+func (p *Persistence) SaveThread() {
+	for {
+		p.Persist()
+		time.Sleep(15 * time.Second)
+	}
 }
 
 func (p *Persistence) LoadSounds(directory string) {
@@ -67,30 +76,34 @@ func (p *Persistence) IncCounter(filename string) {
 	defer p.mutex.Unlock()
 
 	k, found := p.getSoundIndex(filename)
+	changed := false
 	if found {
 		if (!p.state.Sounds[k].Overheated) {
 			p.state.Sounds[k].Count++
 			p.state.Sounds[k].Temperature += 30.0
 			log.WithField("count", p.state.Sounds[k].Count).
 			    WithField("temp", p.state.Sounds[k].Temperature).
-			    Error("Increased sound count and temperature")
+			    Info("Increased sound count and temperature")
 			if p.state.Sounds[k].Temperature > 100.0 {
-				log.WithField("temp", p.state.Sounds[k].Temperature).Error("Sound now overheated! Bäm!")
+				log.WithField("temp", p.state.Sounds[k].Temperature).Warn("Sound now overheated! Bäm!")
 				p.state.Sounds[k].Overheated = true
 			}
+			changed = true
 		} else {
-			log.WithField("temp", p.state.Sounds[k].Temperature).Error("Sound too hot, cool down first")
+			log.WithField("temp", p.state.Sounds[k].Temperature).Warn("Sound too hot, cool down first")
 		}
 	} else {
 		log.WithField("id", k).Error("Sound not found during counter increase")
 	}
-	p.PersistNoLock()
+	if p.UpdateCallback != nil && changed {
+		p.UpdateCallback()
+	}
 }
 
 func (p *Persistence) Persist() error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
-	return p.PersistNoLock()
+	return p.persistNoLock()
 }
 
 func (p *Persistence) Load() {
@@ -108,7 +121,7 @@ func (p *Persistence) Load() {
 	p.loadSoundsNolock("sounds")
 }
 
-func (p *Persistence) PersistNoLock() error {
+func (p *Persistence) persistNoLock() error {
 	bytes, err := json.Marshal(p.state)
 	if err != nil {
 		return err
@@ -118,9 +131,6 @@ func (p *Persistence) PersistNoLock() error {
 		return err
 	}
 	log.WithField("numSounds", len(p.state.Sounds)).Info("Database saved to disk")
-	if p.PersistCallback != nil {
-		p.PersistCallback()
-	}
 	return nil
 }
 
@@ -132,7 +142,6 @@ func (p *Persistence) loadSoundsNolock(directory string) {
 		}
 	}
 	log.WithField("numSounds", len(p.state.Sounds)).Info("Sounds updated from sound folder")
-	p.PersistNoLock()
 }
 
 func (p *Persistence) getSoundIndex(name string) (int, bool) {

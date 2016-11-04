@@ -15,7 +15,7 @@ export default class Sound extends React.Component {
     }
 
     play() {
-        fetch('http://localhost:8080/api/play/' + this.state.SoundFile);
+        fetch('http://pi:8080/api/play/' + this.state.SoundFile);
     }
 
     render() {

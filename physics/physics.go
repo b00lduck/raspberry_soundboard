@@ -23,14 +23,14 @@ func Process(persistence *persistence.Persistence) {
 				diff := (oldTemp - 20.0) * 0.001
 				newTemp := oldTemp - diff
 				state.Sounds[k].Temperature = newTemp
-				changed = true
 				if newTemp < 50 {
 					state.Sounds[k].Overheated = false
 				}
+				changed = true
 			}
 		}
-		if changed {
-			persistence.PersistNoLock()
+		if persistence.UpdateCallback != nil && changed {
+			persistence.UpdateCallback()
 		}
 		persistence.Unlock()
 

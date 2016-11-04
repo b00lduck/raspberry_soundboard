@@ -13,7 +13,7 @@ func main() {
 
 	persistence := persistence.NewPersistence()
 	hub := websocket.NewHub(persistence)
-	persistence.PersistCallback = hub.Broadcast
+	persistence.UpdateCallback = hub.Broadcast
 	go hub.Run()
 	http.HandleFunc("/api/websocket", func(w http.ResponseWriter, r *http.Request) {
 		websocket.ServeWs(hub, w, r)

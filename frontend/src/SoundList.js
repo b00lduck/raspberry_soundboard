@@ -45,7 +45,7 @@ export default class SoundList extends React.Component {
                        <SoundOverheated data={item} key={item.SoundFile} />
                     ))
                 }
-                <Websocket url="ws://localhost:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
+                <Websocket url="ws://pi:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
             </div>
         );
     }

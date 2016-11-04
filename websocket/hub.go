@@ -41,7 +41,6 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case <-h.broadcast:
-			log.Info("broadcast to all clients")
 			for client := range h.clients {
 				select {
 				case client.send <- h.persistence.JsonState():

@@ -71,6 +71,14 @@ func (p *Persistence) JsonState() []byte {
 	return myJson
 }
 
+func (p *Persistence) IsPlayable(filename string) bool {
+	k, found := p.getSoundIndex(filename)
+	if found {
+		return !p.state.Sounds[k].Overheated
+	}
+	return false
+}
+
 func (p *Persistence) IncCounter(filename string) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()

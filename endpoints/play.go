@@ -31,22 +31,27 @@ func InitPlay(persistence *persistence.Persistence) {
 func playSound(filename string, persistence *persistence.Persistence) error {
 	if strings.HasSuffix(filename, ".mp3") {
 
-		persistence.IncCounter(filename)
+		if persistence.IsPlayable(filename) {
 
-		filenameWithPath := "sounds/" + filename
-		log.WithField("filename", filename).Info("playing sound")
-		if _, err := os.Stat(filenameWithPath); os.IsNotExist(err) {
-			log.Error(filenameWithPath)
-			return fmt.Errorf("Not found")
+			filenameWithPath := "sounds/" + filename
+			log.WithField("filename", filename).Info("playing sound")
+			if _, err := os.Stat(filenameWithPath); os.IsNotExist(err) {
+				log.Error(filenameWithPath)
+				return fmt.Errorf("Not found")
+			}
+
+			go func() {
+				cmd := exec.Command("omxplayer", "-o", "hdmi", filenameWithPath)
+				err := cmd.Run()
+				if err != nil {
+					log.Error(err)
+				}
+			}()
+
+			persistence.IncCounter(filename)
+
 		}
 
-		go func() {
-			cmd := exec.Command("omxplayer", "-o", "hdmi", filenameWithPath)
-			err := cmd.Run()
-			if err != nil {
-				log.Error(err)
-			}
-		}()
 	} else {
 		return fmt.Errorf("no .mp3 suffix")
 	}

@@ -7,14 +7,14 @@ export default class Sound extends React.Component {
     constructor(props) {
         super(props);
         var newState = props.data;
-        var rainbow = new Rainbow()
+        var rainbow = new Rainbow();
         newState.color = '#' + rainbow.colourAt(props.data.Temperature);
         this.state = newState;
     }
 
     componentWillReceiveProps(props) {
         var newState = props.data;
-        var rainbow = new Rainbow()
+        var rainbow = new Rainbow();
         newState.color = '#' + rainbow.colourAt(props.data.Temperature);
         this.setState(newState);
     }

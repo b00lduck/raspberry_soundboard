@@ -1,7 +1,6 @@
 .SoundOverheated {
   float: left;
   margin: 4px;
-  filter: drop-shadow(8px 8px 10px red);
   font-size: 75%;
 }
 

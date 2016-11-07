@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"time"
 	"bytes"
+	"sort"
 )
 
 type SoundList struct {
@@ -20,6 +21,7 @@ type Sound struct {
 	Count       int
 	Temperature float32
 	Overheated  bool
+	Deleted     bool
 }
 
 type Persistence struct {
@@ -41,18 +43,14 @@ func NewPersistence() *Persistence {
 
 func (p *Persistence) SaveThread() {
 	for {
+		p.loadSoundsNolock("sounds")
 		p.Persist()
 		time.Sleep(15 * time.Second)
 	}
 }
 
-func (p *Persistence) LoadSounds(directory string) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	p.loadSoundsNolock(directory)
-}
-
 func (p *Persistence) State() *SoundList {
+	sort.Sort(ByNumPlayed(p.state.Sounds))
 	return p.state
 }
 
@@ -66,7 +64,16 @@ func (p *Persistence) Unlock() {
 
 func (p *Persistence) JsonState() []byte {
 	soundList := p.State()
-	myJson, err := json.Marshal(soundList)
+
+	filteredSoundList := SoundList{make([]Sound, 0)}
+
+	for _, v := range soundList.Sounds {
+		if !v.Deleted {
+			filteredSoundList.Sounds = append(filteredSoundList.Sounds, v)
+		}
+	}
+
+	myJson, err := json.Marshal(filteredSoundList)
 	if err != nil {
 		log.Error(err)
 	}
@@ -74,9 +81,9 @@ func (p *Persistence) JsonState() []byte {
 }
 
 func (p *Persistence) IsPlayable(filename string) bool {
-	k, found := p.getSoundIndex(filename)
+	k, found := p.getSoundIndex(filename, p.state.Sounds)
 	if found {
-		return !p.state.Sounds[k].Overheated
+		return (!p.state.Sounds[k].Overheated) && (!p.state.Sounds[k].Deleted)
 	}
 	return false
 }
@@ -85,7 +92,7 @@ func (p *Persistence) IncCounter(filename string) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	k, found := p.getSoundIndex(filename)
+	k, found := p.getSoundIndex(filename, p.state.Sounds)
 	changed := false
 	if found {
 		if (!p.state.Sounds[k].Overheated) {
@@ -119,16 +126,15 @@ func (p *Persistence) Persist() error {
 func (p *Persistence) Load() {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
-	bytes, err := ioutil.ReadFile("database.json")
+	jsonBytes, err := ioutil.ReadFile("database.json")
 	if err != nil {
 		log.Error(err)
 	}
-	err = json.Unmarshal(bytes, &p.state)
+	err = json.Unmarshal(jsonBytes, &p.state)
 	if err != nil {
 		log.Error(err)
 	}
 	log.WithField("numSounds", len(p.state.Sounds)).Info("Database loaded from disk")
-	p.loadSoundsNolock("sounds")
 }
 
 func (p *Persistence) persistNoLock() error {
@@ -149,17 +155,39 @@ func (p *Persistence) persistNoLock() error {
 }
 
 func (p *Persistence) loadSoundsNolock(directory string) {
+
+	log.WithField("numSounds", len(p.state.Sounds)).Debug("Updating sounds from sound folder")
+
+	// add new sounds
 	sounds := GetSounds(directory)
 	for _, v := range sounds.Sounds {
-		if _, found := p.getSoundIndex(v.SoundFile); !found {
+		if _, found := p.getSoundIndex(v.SoundFile, p.state.Sounds); !found {
 			p.state.Sounds = append(p.state.Sounds, v)
+			log.WithField("soundFile", v.SoundFile).Info("added new sound")
+		}
+		if index, found := p.getSoundIndex(v.SoundFile, p.state.Sounds); found && p.state.Sounds[index].Deleted {
+			oldCount := p.state.Sounds[index].Count
+			oldTemp := p.state.Sounds[index].Temperature
+			p.state.Sounds[index] = v
+			p.state.Sounds[index].Count = oldCount
+			p.state.Sounds[index].Temperature = oldTemp
+			log.WithField("soundFile", v.SoundFile).Info("added new sound")
 		}
 	}
-	log.WithField("numSounds", len(p.state.Sounds)).Info("Sounds updated from sound folder")
+
+	// delete nonexsisting sounds
+	for k, v := range p.state.Sounds {
+		if _, found := p.getSoundIndex(v.SoundFile, sounds.Sounds); !found {
+			p.state.Sounds[k].Deleted = true
+			log.WithField("soundFile", p.state.Sounds[k].SoundFile).Info("removed sound")
+		}
+	}
+
+	log.WithField("numSounds", len(p.state.Sounds)).Debug("Sounds updated from sound folder")
 }
 
-func (p *Persistence) getSoundIndex(name string) (int, bool) {
-	for k, v := range p.state.Sounds {
+func (p *Persistence) getSoundIndex(name string, slice []Sound) (int, bool) {
+	for k, v := range slice {
 		if v.SoundFile == name {
 			return k, true
 		}

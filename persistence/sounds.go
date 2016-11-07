@@ -5,21 +5,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"strings"
 	"os"
-	"sort"
-	"strconv"
 )
-
-type ByNumPlayed []Sound
-
-func (s ByNumPlayed) Len() int {
-	return len(s)
-}
-func (s ByNumPlayed) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s ByNumPlayed) Less(i, j int) bool {
-	return s[i].Count > s[j].Count
-}
 
 func GetSounds(directory string) SoundList {
 	sounds := make([]Sound, 0)
@@ -36,9 +22,10 @@ func GetSounds(directory string) SoundList {
 				newSound := Sound{
 					SoundFile: filename,
 					HasImage: true,
-					Count: getCountLegacy(directory + "/" + filename),
+					Count: 0,
 					Temperature: 20,
-					Overheated: false}
+					Overheated: false,
+					Deleted: false}
 				filenameWithoutExt := filename[:len(filename)-4]
 				pngFilename := filenameWithoutExt + ".png"
 				if _, err := os.Stat(directory + "/" + pngFilename); os.IsNotExist(err) {
@@ -56,29 +43,5 @@ func GetSounds(directory string) SoundList {
 		}
 	}
 
-	sort.Sort(ByNumPlayed(sounds))
-
 	return SoundList{sounds}
-}
-
-func getCountLegacy(filename string) int {
-	countfile := filename + ".count"
-
-	_, err := os.Stat(countfile)
-	if err != nil {
-		log.Error(err)
-		return 0
-	}
-
-	count, err := ioutil.ReadFile(countfile)
-	if err != nil {
-		log.Error(err)
-		return 0
-	}
-	intCount, err := strconv.Atoi(string(count))
-	if err != nil {
-		log.Error(err)
-		return 0
-	}
-	return intCount
 }

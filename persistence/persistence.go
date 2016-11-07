@@ -177,7 +177,7 @@ func (p *Persistence) loadSoundsNolock(directory string) {
 
 	// delete nonexsisting sounds
 	for k, v := range p.state.Sounds {
-		if _, found := p.getSoundIndex(v.SoundFile, sounds.Sounds); !found {
+		if _, found := p.getSoundIndex(v.SoundFile, sounds.Sounds); !v.Deleted && !found {
 			p.state.Sounds[k].Deleted = true
 			log.WithField("soundFile", p.state.Sounds[k].SoundFile).Info("removed sound")
 		}

@@ -43,8 +43,10 @@ func NewPersistence() *Persistence {
 
 func (p *Persistence) SaveThread() {
 	for {
+		p.mutex.Lock()
 		p.loadSoundsNolock("sounds")
-		p.Persist()
+		p.persistNoLock()
+		p.mutex.Unlock()
 		time.Sleep(15 * time.Second)
 	}
 }
@@ -117,12 +119,6 @@ func (p *Persistence) IncCounter(filename string) {
 	}
 }
 
-func (p *Persistence) Persist() error {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	return p.persistNoLock()
-}
-
 func (p *Persistence) Load() {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
@@ -176,6 +172,14 @@ func (p *Persistence) loadSoundsNolock(directory string) {
 	}
 
 	// delete nonexsisting sounds
+	for k, v := range p.state.Sounds {
+		if _, found := p.getSoundIndex(v.SoundFile, sounds.Sounds); !v.Deleted && !found {
+			p.state.Sounds[k].Deleted = true
+			log.WithField("soundFile", p.state.Sounds[k].SoundFile).Info("removed sound")
+		}
+	}
+
+	// delete double sounds
 	for k, v := range p.state.Sounds {
 		if _, found := p.getSoundIndex(v.SoundFile, sounds.Sounds); !v.Deleted && !found {
 			p.state.Sounds[k].Deleted = true

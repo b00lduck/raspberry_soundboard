@@ -7,13 +7,15 @@ export default class SoundSubList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            data: props.data
+            data: props.data,
+            mode: props.mode
         };
     }
 
     componentWillReceiveProps(nextProps) {
         this.setState({
-            data: nextProps.data
+            data: nextProps.data,
+            mode: nextProps.mode
         });
     }
 

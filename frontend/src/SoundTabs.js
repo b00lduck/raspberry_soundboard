@@ -1,10 +1,10 @@
 import React from 'react';
 import Websocket from 'react-websocket';
-import './SoundList.css';
-import Sound from './Sound.js';
-import SoundOverheated from './SoundOverheated.js';
+import { Tabs, Tab } from 'react-bootstrap';
+import './SoundTabs.css';
+import SoundSubList from './SoundSubList.js';
 
-export default class SoundList extends React.Component {
+export default class SoundTabs extends React.Component {
 
     constructor(props) {
         super(props);
@@ -32,19 +32,15 @@ export default class SoundList extends React.Component {
 
     render() {
         return (
-            <div className="SoundList">
-                {
-                    this.state.AvailableSounds.map(item => (
-                        <Sound data={item} key={item.SoundFile} />
-                    ))
-                }
-                <br className="clearfix" />
-                <hr />
-                {
-                    this.state.OverheatedSounds.map(item => (
-                       <SoundOverheated data={item} key={item.SoundFile} />
-                    ))
-                }
+            <div>
+                <Tabs defaultActiveKey={1} id="sound-list-tabs">
+                    <Tab eventKey={1} title="Available sounds">
+                        <SoundSubList mode="normal" data={this.state.AvailableSounds} />
+                    </Tab>
+                    <Tab eventKey={2} title="Overheated sounds">
+                        <SoundSubList mode="overheated" data={this.state.OverheatedSounds} />
+                    </Tab>
+                </Tabs>
                 <Websocket url="ws://pi:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
             </div>
         );

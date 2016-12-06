@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import './App.css';
-import SoundList from './SoundList.js';
+import SoundTabs from './SoundTabs.js';
 
 class App extends Component {
   render() {
     return (
       <div className="App">
-        <SoundList />
+        <SoundTabs />
       </div>
     );
   }

@@ -27,6 +27,11 @@ export default class SoundTabs extends React.Component {
                newState.AvailableSounds.push(x);
            }
         });
+
+        newState.OverheatedSounds.sort(function(a, b) {
+           return a.Temperature - b.Temperature;
+        });
+
         this.setState(newState);
     }
 
@@ -34,10 +39,10 @@ export default class SoundTabs extends React.Component {
         return (
             <div>
                 <Tabs defaultActiveKey={1} id="sound-list-tabs">
-                    <Tab eventKey={1} title="Available sounds">
+                    <Tab eventKey={1} title={"Available sounds (" + this.state.AvailableSounds.length + ")"}>
                         <SoundSubList mode="normal" data={this.state.AvailableSounds} />
                     </Tab>
-                    <Tab eventKey={2} title="Overheated sounds">
+                    <Tab eventKey={2} title={"Overheated sounds (" + this.state.OverheatedSounds.length + ")"}>
                         <SoundSubList mode="overheated" data={this.state.OverheatedSounds} />
                     </Tab>
                 </Tabs>

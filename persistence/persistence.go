@@ -22,6 +22,7 @@ type Sound struct {
 	Temperature float32
 	Overheated  bool
 	Deleted     bool
+	Category    string
 }
 
 type Persistence struct {
@@ -161,6 +162,12 @@ func (p *Persistence) loadSoundsNolock(directory string) {
 			p.state.Sounds = append(p.state.Sounds, v)
 			log.WithField("soundFile", v.SoundFile).Info("added new sound")
 		}
+
+		if index, found := p.getSoundIndex(v.SoundFile, p.state.Sounds); found && p.state.Sounds[index].Category != v.Category {
+			p.state.Sounds[index].Category = v.Category
+			log.WithField("soundFile", v.SoundFile).WithField("newCategory", v.Category).Info("changed category of sound")
+		}
+
 		if index, found := p.getSoundIndex(v.SoundFile, p.state.Sounds); found && p.state.Sounds[index].Deleted {
 			oldCount := p.state.Sounds[index].Count
 			oldTemp := p.state.Sounds[index].Temperature

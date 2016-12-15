@@ -7,10 +7,40 @@ import (
 	"os"
 )
 
-func GetSounds(directory string) SoundList {
-	sounds := make([]Sound, 0)
+func GetSounds(directoy string) SoundList {
+
+	categories := GetCategoryDirs(directoy)
+	allSounds := make([]Sound, 0)
+
+	for _, v := range categories {
+		allSounds = append(allSounds, GetSoundsOfCategory(directoy, v)...)
+	}
+
+	return SoundList{allSounds}
+}
+
+func GetCategoryDirs(directory string) []string {
+
+	categoryDirs := make([]string, 0)
 
 	dir, err := ioutil.ReadDir(directory)
+	if err != nil {
+		log.Error(err)
+	}
+
+	for _, v := range dir {
+		if v.IsDir() {
+			categoryDirs = append(categoryDirs, v.Name())
+		}
+	}
+
+	return categoryDirs
+}
+
+func GetSoundsOfCategory(directory string, category string) []Sound {
+	sounds := make([]Sound, 0)
+
+	dir, err := ioutil.ReadDir(directory + "/" + category)
 	if err != nil {
 		log.Error(err)
 	}
@@ -25,7 +55,8 @@ func GetSounds(directory string) SoundList {
 					Count: 0,
 					Temperature: 20,
 					Overheated: false,
-					Deleted: false}
+					Deleted: false,
+					Category: category}
 				filenameWithoutExt := filename[:len(filename)-4]
 				pngFilename := filenameWithoutExt + ".png"
 				if _, err := os.Stat(directory + "/" + pngFilename); os.IsNotExist(err) {
@@ -43,5 +74,5 @@ func GetSounds(directory string) SoundList {
 		}
 	}
 
-	return SoundList{sounds}
+	return sounds
 }

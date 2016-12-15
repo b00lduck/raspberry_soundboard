@@ -9,14 +9,14 @@ export default class SoundTabs extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            AvailableSounds: [],
+            AvailableSounds: {},
             OverheatedSounds: []
         };
     }
 
     handleData(data) {
         let newState = {
-            AvailableSounds: [],
+            AvailableSounds: {},
             OverheatedSounds: []
         };
 
@@ -24,7 +24,10 @@ export default class SoundTabs extends React.Component {
            if (x.Overheated) {
                newState.OverheatedSounds.push(x);
            } else {
-               newState.AvailableSounds.push(x);
+               if (newState.AvailableSounds[x.Category] === undefined) {
+                   newState.AvailableSounds[x.Category] = [];
+               }
+               newState.AvailableSounds[x.Category].push(x);
            }
         });
 
@@ -39,14 +42,14 @@ export default class SoundTabs extends React.Component {
         return (
             <div>
                 <Tabs defaultActiveKey={1} id="sound-list-tabs">
-                    <Tab eventKey={1} title={"Available sounds (" + this.state.AvailableSounds.length + ")"}>
-                        <SoundSubList mode="normal" data={this.state.AvailableSounds} />
+                    <Tab eventKey={1} title={"Available sounds (" + this.state.AvailableSounds.default.length + ")"}>
+                        <SoundSubList mode="normal" data={this.state.AvailableSounds.default} />
                     </Tab>
                     <Tab eventKey={2} title={"Overheated sounds (" + this.state.OverheatedSounds.length + ")"}>
                         <SoundSubList mode="overheated" data={this.state.OverheatedSounds} />
                     </Tab>
                 </Tabs>
-                <Websocket url="ws://pi:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
+                <Websocket url="ws://localhost:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
             </div>
         );
     }

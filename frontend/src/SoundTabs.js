@@ -67,7 +67,7 @@ export default class SoundTabs extends React.Component {
 
         return (
             <div>
-                <Tabs defaultActiveKey="default" id="sound-list-tabs">
+                <Tabs defaultActiveKey="Default" id="sound-list-tabs">
                     {tabs}
                 </Tabs>
                 <Websocket url="ws://pi:8080/api/websocket" onMessage={this.handleData.bind(this)}/>

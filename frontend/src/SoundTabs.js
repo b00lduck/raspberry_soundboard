@@ -34,6 +34,12 @@ export default class SoundTabs extends React.Component {
            }
         });
 
+        newState.Categories.sort(function(a,b) {
+            if (a === "Default") return -1;
+            if (b === "Default") return 1;
+            return a < b;
+        });
+
         newState.OverheatedSounds.sort(function(a, b) {
            return a.Temperature - b.Temperature;
         });

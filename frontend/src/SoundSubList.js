@@ -7,14 +7,14 @@ export default class SoundSubList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            data: props.data,
-            mode: props.mode
+            sounds: [],
+            mode: "normal"
         };
     }
 
     componentWillReceiveProps(nextProps) {
         this.setState({
-            data: nextProps.data,
+            sounds: nextProps.sounds,
             mode: nextProps.mode
         });
     }
@@ -23,7 +23,11 @@ export default class SoundSubList extends React.Component {
 
         var soundElems = [];
 
-        this.state.data.forEach(item => {
+        if (this.state.sounds === undefined) {
+            return <h4>Sorry, no data available.</h4>
+        }
+
+        this.state.sounds.forEach(item => {
             var soundElem;
             switch (this.state.mode) {
                 case "overheated":

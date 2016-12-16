@@ -47,16 +47,24 @@ export default class SoundTabs extends React.Component {
 
         this.state.Categories.forEach(item => {
             tabs.push(
-                <Tab eventKey={item} title={"Available sounds (" + this.state.AvailableSounds[item].length + ")"}>
+                <Tab eventKey={item} title={item + " (" + this.state.AvailableSounds[item].length + ")"}>
                     <SoundSubList mode="normal" sounds={this.state.AvailableSounds[item]} />
                 </Tab>
             );
         });
 
+        tabs.push(
+            <Tab eventKey="overheated" title={"Overheated (" + this.state.OverheatedSounds.length + ")"}>
+                <SoundSubList mode="normal" sounds={this.state.OverheatedSounds} />
+            </Tab>
+        );
+
         return (
             <div>
-                <Tabs defaultActiveKey="default" id="sound-list-tabs">{tabs}</Tabs>
-                <Websocket url="ws://localhost:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
+                <Tabs defaultActiveKey="default" id="sound-list-tabs">
+                    {tabs}
+                </Tabs>
+                <Websocket url="ws://pi:8080/api/websocket" onMessage={this.handleData.bind(this)}/>
             </div>
         );
     }

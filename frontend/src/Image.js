@@ -15,7 +15,7 @@ export default class Sound extends React.Component {
     render() {
         return (
             <div className="Image">
-                <img alt="mp3" src={"http://pi:8080/api/image/" + this.state.ImageFile} />
+                <img alt="mp3" src={"http://pi:8080/api/image/" + this.state.Category + "/" + this.state.ImageFile} />
             </div>
         )
     }

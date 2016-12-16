@@ -33,7 +33,9 @@ func playSound(filename string, persistence *persistence.Persistence) error {
 
 		if persistence.IsPlayable(filename) {
 
-			filenameWithPath := "sounds/" + filename
+			cat := persistence.GetCategory(filename)
+
+			filenameWithPath := "sounds/" + cat + "/" + filename
 			log.WithField("filename", filename).Info("playing sound")
 			if _, err := os.Stat(filenameWithPath); os.IsNotExist(err) {
 				log.Error(filenameWithPath)

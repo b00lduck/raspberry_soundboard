@@ -91,6 +91,15 @@ func (p *Persistence) IsPlayable(filename string) bool {
 	return false
 }
 
+func (p *Persistence) GetCategory(filename string) string {
+	k, found := p.getSoundIndex(filename, p.state.Sounds)
+	if found {
+		return (p.state.Sounds[k].Category)
+	}
+	return ""
+}
+
+
 func (p *Persistence) IncCounter(filename string) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()

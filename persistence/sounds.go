@@ -59,9 +59,9 @@ func GetSoundsOfCategory(directory string, category string) []Sound {
 					Category: category}
 				filenameWithoutExt := filename[:len(filename)-4]
 				pngFilename := filenameWithoutExt + ".png"
-				if _, err := os.Stat(directory + "/" + pngFilename); os.IsNotExist(err) {
+				if _, err := os.Stat(directory + "/" + category + "/" + pngFilename); os.IsNotExist(err) {
 					jpgFilename := filenameWithoutExt + ".jpg"
-					if _, err := os.Stat(directory + "/" + jpgFilename); os.IsNotExist(err) {
+					if _, err := os.Stat(directory + "/" + category + "/" + jpgFilename); os.IsNotExist(err) {
 						newSound.HasImage = false
 					} else {
 						newSound.ImageFile = jpgFilename

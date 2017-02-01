@@ -43,7 +43,7 @@ func playSound(filename string, persistence *persistence.Persistence) error {
 			}
 
 			go func() {
-				cmd := exec.Command("omxplayer", "-o", "hdmi", filenameWithPath)
+				cmd := exec.Command("omxplayer", "-o", "both", filenameWithPath)
 				err := cmd.Run()
 				if err != nil {
 					log.Error(err)

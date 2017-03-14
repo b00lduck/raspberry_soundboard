@@ -67,8 +67,8 @@ func playSound(filename string, persistence *persistence.Persistence) error {
 		}
 
 		b, _ := ioutil.ReadFile(filenameWithPath)
-		url := string(b)
-		url := strings.TrimSpace(url)
+		link := string(b)
+		url := strings.TrimSpace(link)
 
 		go func() {
 			cmd := exec.Command("omxyoutube", url)
